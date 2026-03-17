@@ -2,14 +2,14 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Yuga Ultimate Rhythm</title>
+<title>Yuga Sekai Rhythm</title>
 <style>
 body {
   margin: 0;
-  background: #000;
+  background: radial-gradient(circle, #000, #001);
   overflow: hidden;
-  color: #0ff;
   font-family: sans-serif;
+  color: white;
 }
 
 .lane {
@@ -17,7 +17,7 @@ body {
   bottom: 0;
   width: 25%;
   height: 100%;
-  border: 1px solid rgba(0,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 .lane:nth-child(1){ left:0;}
@@ -27,10 +27,10 @@ body {
 
 .hit-line {
   position: absolute;
-  bottom: 100px;
+  bottom: 120px;
   width: 100%;
   height: 4px;
-  background: #0ff;
+  background: #fff;
 }
 
 .note {
@@ -38,16 +38,28 @@ body {
   width: 80%;
   left: 10%;
   height: 20px;
-  background: #0ff;
   border-radius: 10px;
+  background: #00f0ff;
 }
 
-.long {
-  background: linear-gradient(#0ff, #004);
+.long { background: #00ff88; height:120px; }
+.slide { background: linear-gradient(90deg,#f0f,#0ff); }
+.flick { background: #ff0; }
+
+#ui {
+  position: absolute;
+  top: 10px;
+  left: 10px;
 }
 
-.slide {
-  background: linear-gradient(90deg, #f0f, #0ff);
+#judge {
+  position: absolute;
+  bottom: 160px;
+  width: 100%;
+  text-align: center;
+  font-size: 2rem;
+  opacity: 0;
+  transition: .2s;
 }
 </style>
 </head>
@@ -59,158 +71,169 @@ body {
 <div class="lane"></div>
 <div class="hit-line"></div>
 
+<div id="ui">
+  <div id="score">Score: 0</div>
+  <div id="combo">Combo: 0</div>
+</div>
+
+<div id="judge"></div>
+
 <script>
 const lanes = document.querySelectorAll('.lane');
 let notes = [];
-let speed = 5;
 let holding = [false,false,false,false];
+let score = 0;
+let combo = 0;
+let speed = 5;
 
 // ===== ノーツ生成 =====
-setInterval(() => {
+setInterval(()=>{
   let r = Math.random();
-  if(r < 0.5){
-    spawnNote(Math.floor(Math.random()*4), "tap");
-  } else if(r < 0.75){
-    spawnNote(Math.floor(Math.random()*4), "long");
-  } else {
-    spawnSlide();
-  }
-}, 700);
+  let lane = Math.floor(Math.random()*4);
 
-// ===== 通常・ロング =====
-function spawnNote(laneIndex, type){
-  const lane = lanes[laneIndex];
-  const note = document.createElement('div');
-  note.className = 'note';
+  if(r<0.4) spawn(lane,"tap");
+  else if(r<0.6) spawn(lane,"long");
+  else if(r<0.8) spawnSlide();
+  else spawn(lane,"flick");
 
-  if(type === "long"){
-    note.classList.add("long");
-    note.style.height = "120px";
-  }
+},600);
 
-  note.style.top = "0px";
-  lane.appendChild(note);
+function spawn(lane,type){
+  const el = document.createElement('div');
+  el.className = 'note '+type;
+  el.style.top = "0px";
+  lanes[lane].appendChild(el);
 
-  notes.push({
-    el: note,
-    lane: laneIndex,
-    type: type,
-    y: 0,
-    hold: false
-  });
+  notes.push({el,lane,type,y:0,hold:false});
 }
 
-// ===== スライド =====
 function spawnSlide(){
-  let start = Math.floor(Math.random()*4);
-  let end = Math.floor(Math.random()*4);
+  let s = Math.floor(Math.random()*4);
+  let t = Math.floor(Math.random()*4);
 
-  const note = document.createElement('div');
-  note.className = 'note slide';
-  note.style.top = "0px";
-  document.body.appendChild(note);
+  const el = document.createElement('div');
+  el.className = 'note slide';
+  document.body.appendChild(el);
 
-  notes.push({
-    el: note,
-    lane: start,
-    targetLane: end,
-    type: "slide",
-    y: 0
-  });
+  notes.push({el,lane:s,target:t,type:"slide",y:0});
 }
 
 // ===== 更新 =====
-function update(){
+function loop(){
   notes.forEach((n,i)=>{
-    n.y += speed;
+    n.y+=speed;
 
-    if(n.type === "slide"){
-      let x = (n.lane + (n.targetLane - n.lane)*(n.y/500)) * (window.innerWidth/4);
-      n.el.style.left = x + "px";
+    if(n.type==="slide"){
+      let x = (n.lane+(n.target-n.lane)*(n.y/500))*(window.innerWidth/4);
+      n.el.style.left = x+"px";
     }
 
-    n.el.style.top = n.y + "px";
+    n.el.style.top = n.y+"px";
 
-    if(n.y > window.innerHeight){
-      n.el.remove();
-      notes.splice(i,1);
+    if(n.y>window.innerHeight){
+      miss(n,i);
     }
   });
-
-  requestAnimationFrame(update);
+  requestAnimationFrame(loop);
 }
-update();
+loop();
 
 // ===== 判定 =====
-function hit(lane){
-  let hitY = window.innerHeight - 120;
+function hit(lane, isFlick=false){
+  let line = window.innerHeight-120;
 
   notes.forEach((n,i)=>{
-    if(n.type === "tap" && n.lane === lane){
-      if(Math.abs(n.y - hitY) < 50){
-        n.el.remove();
-        notes.splice(i,1);
-      }
-    }
+    let diff = Math.abs(n.y-line);
 
-    if(n.type === "long" && n.lane === lane){
-      if(Math.abs(n.y - hitY) < 50){
-        n.hold = true;
-      }
-      if(n.hold && !holding[lane]){
-        n.el.remove();
-        notes.splice(i,1);
-      }
-    }
+    if(n.lane===lane){
 
-    if(n.type === "slide"){
-      if(Math.abs(n.y - hitY) < 50){
-        n.el.remove();
-        notes.splice(i,1);
+      if(n.type==="tap" && diff<40) perfect(n,i);
+      else if(n.type==="flick" && isFlick && diff<60) perfect(n,i);
+
+      else if(n.type==="long"){
+        if(diff<40) n.hold=true;
+        if(n.hold && !holding[lane]) perfect(n,i);
       }
+
+      else if(n.type==="slide" && diff<50){
+        perfect(n,i);
+      }
+
     }
   });
 }
 
-// ===== PC操作 =====
-document.addEventListener('keydown', e=>{
-  if(e.key==='d'){ hit(0); holding[0]=true;}
-  if(e.key==='f'){ hit(1); holding[1]=true;}
-  if(e.key==='j'){ hit(2); holding[2]=true;}
-  if(e.key==='k'){ hit(3); holding[3]=true;}
+function perfect(n,i){
+  n.el.remove();
+  notes.splice(i,1);
+  score+=300;
+  combo++;
+  showJudge("PERFECT");
+  updateUI();
+}
+
+function miss(n,i){
+  n.el.remove();
+  notes.splice(i,1);
+  combo=0;
+  showJudge("MISS");
+  updateUI();
+}
+
+// ===== UI =====
+function updateUI(){
+  scoreEl.innerText="Score: "+score;
+  comboEl.innerText="Combo: "+combo;
+}
+
+function showJudge(t){
+  judge.innerText=t;
+  judge.style.opacity=1;
+  setTimeout(()=>judge.style.opacity=0,200);
+}
+
+// ===== 入力 =====
+document.addEventListener('keydown',e=>{
+  if(e.key==='d'){hit(0);holding[0]=true;}
+  if(e.key==='f'){hit(1);holding[1]=true;}
+  if(e.key==='j'){hit(2);holding[2]=true;}
+  if(e.key==='k'){hit(3);holding[3]=true;}
 });
 
-document.addEventListener('keyup', e=>{
+document.addEventListener('keyup',e=>{
   if(e.key==='d') holding[0]=false;
   if(e.key==='f') holding[1]=false;
   if(e.key==='j') holding[2]=false;
   if(e.key==='k') holding[3]=false;
 });
 
-// ===== スマホ対応（重要🔥）=====
-lanes.forEach((lane, index) => {
+// ===== タップ＆スワイプ =====
+lanes.forEach((lane,i)=>{
+  let startY=0;
 
-  lane.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    holding[index] = true;
-    hit(index);
+  lane.addEventListener('touchstart',e=>{
+    startY=e.touches[0].clientY;
+    holding[i]=true;
+    hit(i);
   });
 
-  lane.addEventListener('touchend', () => {
-    holding[index] = false;
+  lane.addEventListener('touchend',e=>{
+    let endY = e.changedTouches[0].clientY;
+    if(startY - endY > 50){
+      hit(i,true); // フリック
+    }
+    holding[i]=false;
   });
 
-  // PCクリックも対応
-  lane.addEventListener('mousedown', () => {
-    holding[index] = true;
-    hit(index);
-  });
-
-  lane.addEventListener('mouseup', () => {
-    holding[index] = false;
-  });
-
+  lane.addEventListener('mousedown',()=>{holding[i]=true;hit(i);});
+  lane.addEventListener('mouseup',()=>holding[i]=false);
 });
+
+// ===== UI参照 =====
+const scoreEl = document.getElementById("score");
+const comboEl = document.getElementById("combo");
+const judge = document.getElementById("judge");
+
 </script>
 
 </body>
