@@ -1,45 +1,130 @@
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Yuga - Cool Profile</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
 
-export default function ProfilePage() {
-  return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
-      <motion.h1
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1 }}
-        className="text-5xl font-bold mb-6"
-      >
-        Yuga's Profile
-      </motion.h1>
+    body {
+      background: #0a0a0a;
+      color: white;
+      overflow-x: hidden;
+    }
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1, delay: 0.3 }}
-      >
-        <Card className="bg-zinc-900 border-none shadow-2xl rounded-2xl p-6 w-80">
-          <CardContent>
-            <h2 className="text-2xl font-semibold mb-2">ゆうが</h2>
-            <p className="text-gray-400 mb-4">
-              クールで動きのあるWEBページを目指しています。
-            </p>
-            <motion.div whileHover={{ scale: 1.1 }}>
-              <Button className="w-full">Follow Me</Button>
-            </motion.div>
-          </CardContent>
-        </Card>
-      </motion.div>
+    header {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      background: linear-gradient(135deg, #000000, #111111);
+    }
 
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, delay: 0.6 }}
-        className="mt-10"
-      >
-        <p className="text-gray-500">© 2026 Yuga</p>
-      </motion.div>
-    </div>
-  );
-}
+    h1 {
+      font-size: 4rem;
+      letter-spacing: 3px;
+      color: #00f0ff;
+      text-shadow: 0 0 20px #00f0ff;
+      animation: glow 2s infinite alternate;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 10px #00f0ff; }
+      to { text-shadow: 0 0 30px #00f0ff; }
+    }
+
+    p {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      opacity: 0.7;
+    }
+
+    section {
+      padding: 100px 20px;
+      text-align: center;
+    }
+
+    .card {
+      margin: 40px auto;
+      padding: 30px;
+      max-width: 500px;
+      border: 1px solid #00f0ff;
+      border-radius: 10px;
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00f0ff;
+    }
+
+    .fade {
+      opacity: 0;
+      transform: translateY(50px);
+      transition: 1s;
+    }
+
+    .fade.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #000;
+      font-size: 0.8rem;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>YUGA</h1>
+  <p>Cool. Simple. Different.</p>
+</header>
+
+<section class="fade">
+  <h2>About Me</h2>
+  <div class="card">
+    <p>名前：ゆうが</p>
+    <p>スタイル：クールでシンプル</p>
+    <p>目標：誰よりもかっこよく</p>
+  </div>
+</section>
+
+<section class="fade">
+  <h2>My Vibe</h2>
+  <div class="card">
+    <p>無駄を削ぎ落としたデザイン</p>
+    <p>静かだけど存在感</p>
+    <p>シンプル is 最強</p>
+  </div>
+</section>
+
+<footer>
+  © 2026 Yuga
+</footer>
+
+<script>
+  const fades = document.querySelectorAll('.fade');
+
+  window.addEventListener('scroll', () => {
+    fades.forEach(fade => {
+      const rect = fade.getBoundingClientRect().top;
+      if (rect < window.innerHeight - 100) {
+        fade.classList.add('show');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
