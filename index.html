@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Yuga Sekai Rhythm++</title>
+<title>Yuga Sekai Rhythm FINAL</title>
 <style>
 body {
   margin: 0;
@@ -26,37 +26,20 @@ body {
 .lane:nth-child(3){ left:50%;}
 .lane:nth-child(4){ left:75%;}
 
-/* ===== 強化された判定ライン ===== */
+/* 判定ライン */
 .hit-line {
   position: absolute;
   bottom: 120px;
   width: 100%;
   height: 6px;
-
-  background: linear-gradient(
-    90deg,
-    rgba(0,255,255,0.1),
-    rgba(0,255,255,1),
-    rgba(0,255,255,0.1)
-  );
-
-  box-shadow:
-    0 0 10px #0ff,
-    0 0 20px #0ff,
-    0 0 40px #0ff;
-
+  background: linear-gradient(90deg,rgba(0,255,255,0.1),#0ff,rgba(0,255,255,0.1));
+  box-shadow: 0 0 10px #0ff,0 0 30px #0ff;
   animation: pulse 1s infinite alternate;
 }
 
 @keyframes pulse {
-  from {
-    opacity: 0.6;
-    transform: scaleY(1);
-  }
-  to {
-    opacity: 1;
-    transform: scaleY(1.2);
-  }
+  from { opacity:0.6; transform:scaleY(1);}
+  to { opacity:1; transform:scaleY(1.2);}
 }
 
 /* ノーツ */
@@ -69,17 +52,11 @@ body {
   background: #00f0ff;
 }
 
-.long { background: #00ff88; height:120px; }
-.slide { background: linear-gradient(90deg,#f0f,#0ff); }
-.flick { background: #ff0; }
+.long { background:#00ff88; height:120px;}
+.slide { background:linear-gradient(90deg,#f0f,#0ff);}
+.flick { background:#ff0;}
 
 /* UI */
-#ui {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-}
-
 #comboDisplay {
   position: absolute;
   bottom: 200px;
@@ -87,7 +64,6 @@ body {
   text-align: center;
   font-size: 2.5rem;
   color: #0ff;
-  text-shadow: 0 0 10px #0ff;
 }
 
 #judge {
@@ -108,10 +84,6 @@ body {
 <div class="lane"></div>
 <div class="hit-line"></div>
 
-<div id="ui">
-  <div id="score">Score: 0</div>
-</div>
-
 <div id="comboDisplay">0 COMBO</div>
 <div id="judge"></div>
 
@@ -121,37 +93,36 @@ const hitLine = document.querySelector('.hit-line');
 
 let notes = [];
 let holding = [false,false,false,false];
-let score = 0;
 let combo = 0;
 let speed = 5;
 
 // ===== ノーツ生成 =====
 setInterval(()=>{
-  let r = Math.random();
-  let lane = Math.floor(Math.random()*4);
+  let r=Math.random();
+  let lane=Math.floor(Math.random()*4);
 
-  if(r<0.4) spawn(lane,"tap");
-  else if(r<0.6) spawn(lane,"long");
-  else if(r<0.8) spawnSlide();
+  if(r<0.5) spawn(lane,"tap");
+  else if(r<0.7) spawn(lane,"long");
+  else if(r<0.9) spawnSlide();
   else spawn(lane,"flick");
 
 },600);
 
 function spawn(lane,type){
-  const el = document.createElement('div');
-  el.className = 'note '+type;
-  el.style.top = "0px";
+  const el=document.createElement('div');
+  el.className='note '+type;
+  el.style.top="0px";
   lanes[lane].appendChild(el);
 
   notes.push({el,lane,type,y:0,hold:false});
 }
 
 function spawnSlide(){
-  let s = Math.floor(Math.random()*4);
-  let t = Math.floor(Math.random()*4);
+  let s=Math.floor(Math.random()*4);
+  let t=Math.floor(Math.random()*4);
 
-  const el = document.createElement('div');
-  el.className = 'note slide';
+  const el=document.createElement('div');
+  el.className='note slide';
   document.body.appendChild(el);
 
   notes.push({el,lane:s,target:t,type:"slide",y:0});
@@ -163,11 +134,11 @@ function loop(){
     n.y+=speed;
 
     if(n.type==="slide"){
-      let x = (n.lane+(n.target-n.lane)*(n.y/500))*(window.innerWidth/4);
-      n.el.style.left = x+"px";
+      let x=(n.lane+(n.target-n.lane)*(n.y/500))*(window.innerWidth/4);
+      n.el.style.left=x+"px";
     }
 
-    n.el.style.top = n.y+"px";
+    n.el.style.top=n.y+"px";
 
     if(n.y>window.innerHeight){
       miss(n,i);
@@ -178,11 +149,11 @@ function loop(){
 loop();
 
 // ===== 判定 =====
-function hit(lane, isFlick=false){
-  let line = window.innerHeight-120;
+function hit(lane,isFlick=false){
+  let line=window.innerHeight-120;
 
   notes.forEach((n,i)=>{
-    let diff = Math.abs(n.y-line);
+    let diff=Math.abs(n.y-line);
 
     if(n.lane===lane){
 
@@ -197,7 +168,6 @@ function hit(lane, isFlick=false){
       else if(n.type==="slide" && diff<50){
         perfect(n,i);
       }
-
     }
   });
 }
@@ -205,41 +175,60 @@ function hit(lane, isFlick=false){
 function perfect(n,i){
   n.el.remove();
   notes.splice(i,1);
-  score+=300;
   combo++;
 
-  // ★ 判定ライン発光
-  hitLine.style.boxShadow = "0 0 40px #fff, 0 0 80px #0ff";
-  setTimeout(()=>{
-    hitLine.style.boxShadow = "0 0 10px #0ff, 0 0 20px #0ff";
-  },100);
+  hitLine.style.boxShadow="0 0 40px #fff,0 0 80px #0ff";
+  setTimeout(()=>hitLine.style.boxShadow="0 0 10px #0ff",100);
 
-  showJudge("PERFECT");
   updateUI();
+  showJudge("PERFECT");
 }
 
 function miss(n,i){
   n.el.remove();
   notes.splice(i,1);
   combo=0;
-  showJudge("MISS");
   updateUI();
+  showJudge("MISS");
 }
 
 // ===== UI =====
 function updateUI(){
-  document.getElementById("score").innerText="Score: "+score;
   document.getElementById("comboDisplay").innerText=combo+" COMBO";
 }
 
 function showJudge(t){
-  const judge = document.getElementById("judge");
-  judge.innerText=t;
-  judge.style.opacity=1;
-  setTimeout(()=>judge.style.opacity=0,200);
+  const j=document.getElementById("judge");
+  j.innerText=t;
+  j.style.opacity=1;
+  setTimeout(()=>j.style.opacity=0,200);
 }
 
-// ===== 入力 =====
+// ===== 🔥 画面どこでもタップ対応 =====
+document.addEventListener("touchstart", e=>{
+  for(let touch of e.touches){
+    let x = touch.clientX;
+    let lane = Math.floor(x / (window.innerWidth/4));
+    holding[lane]=true;
+    hit(lane);
+  }
+});
+
+document.addEventListener("touchend", e=>{
+  for(let t of e.changedTouches){
+    let x = t.clientX;
+    let lane = Math.floor(x / (window.innerWidth/4));
+
+    // フリック判定
+    if(t.clientY < window.innerHeight - 200){
+      hit(lane,true);
+    }
+
+    holding[lane]=false;
+  }
+});
+
+// PC操作
 document.addEventListener('keydown',e=>{
   if(e.key==='d'){hit(0);holding[0]=true;}
   if(e.key==='f'){hit(1);holding[1]=true;}
@@ -252,31 +241,6 @@ document.addEventListener('keyup',e=>{
   if(e.key==='f') holding[1]=false;
   if(e.key==='j') holding[2]=false;
   if(e.key==='k') holding[3]=false;
-});
-
-// ===== スマホ対応 =====
-lanes.forEach((lane,i)=>{
-  let startY = 0;
-
-  lane.addEventListener('touchstart', e=>{
-    e.preventDefault();
-    startY = e.touches[0].clientY;
-    holding[i]=true;
-    hit(i);
-  });
-
-  lane.addEventListener('touchend', e=>{
-    let endY = e.changedTouches[0].clientY;
-
-    if(startY - endY > 50){
-      hit(i,true);
-    }
-
-    holding[i]=false;
-  });
-
-  lane.addEventListener('mousedown', ()=>{holding[i]=true;hit(i);});
-  lane.addEventListener('mouseup', ()=>holding[i]=false);
 });
 </script>
 
