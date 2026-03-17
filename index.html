@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Yuga Sekai Rhythm+</title>
+<title>Yuga Sekai Rhythm++</title>
 <style>
 body {
   margin: 0;
@@ -26,13 +26,37 @@ body {
 .lane:nth-child(3){ left:50%;}
 .lane:nth-child(4){ left:75%;}
 
-/* 判定ライン */
+/* ===== 強化された判定ライン ===== */
 .hit-line {
   position: absolute;
   bottom: 120px;
   width: 100%;
-  height: 4px;
-  background: #fff;
+  height: 6px;
+
+  background: linear-gradient(
+    90deg,
+    rgba(0,255,255,0.1),
+    rgba(0,255,255,1),
+    rgba(0,255,255,0.1)
+  );
+
+  box-shadow:
+    0 0 10px #0ff,
+    0 0 20px #0ff,
+    0 0 40px #0ff;
+
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.6;
+    transform: scaleY(1);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1.2);
+  }
 }
 
 /* ノーツ */
@@ -93,6 +117,8 @@ body {
 
 <script>
 const lanes = document.querySelectorAll('.lane');
+const hitLine = document.querySelector('.hit-line');
+
 let notes = [];
 let holding = [false,false,false,false];
 let score = 0;
@@ -181,6 +207,13 @@ function perfect(n,i){
   notes.splice(i,1);
   score+=300;
   combo++;
+
+  // ★ 判定ライン発光
+  hitLine.style.boxShadow = "0 0 40px #fff, 0 0 80px #0ff";
+  setTimeout(()=>{
+    hitLine.style.boxShadow = "0 0 10px #0ff, 0 0 20px #0ff";
+  },100);
+
   showJudge("PERFECT");
   updateUI();
 }
@@ -206,7 +239,7 @@ function showJudge(t){
   setTimeout(()=>judge.style.opacity=0,200);
 }
 
-// ===== PC操作 =====
+// ===== 入力 =====
 document.addEventListener('keydown',e=>{
   if(e.key==='d'){hit(0);holding[0]=true;}
   if(e.key==='f'){hit(1);holding[1]=true;}
@@ -221,23 +254,20 @@ document.addEventListener('keyup',e=>{
   if(e.key==='k') holding[3]=false;
 });
 
-// ===== スマホ完全対応（マルチタッチ🔥）=====
+// ===== スマホ対応 =====
 lanes.forEach((lane,i)=>{
   let startY = 0;
 
   lane.addEventListener('touchstart', e=>{
     e.preventDefault();
-    for(let t of e.touches){
-      startY = t.clientY;
-      holding[i]=true;
-      hit(i);
-    }
+    startY = e.touches[0].clientY;
+    holding[i]=true;
+    hit(i);
   });
 
   lane.addEventListener('touchend', e=>{
     let endY = e.changedTouches[0].clientY;
 
-    // フリック判定
     if(startY - endY > 50){
       hit(i,true);
     }
@@ -245,7 +275,6 @@ lanes.forEach((lane,i)=>{
     holding[i]=false;
   });
 
-  // PCクリック
   lane.addEventListener('mousedown', ()=>{holding[i]=true;hit(i);});
   lane.addEventListener('mouseup', ()=>holding[i]=false);
 });
