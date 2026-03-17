@@ -49,28 +49,28 @@ body {
 .slide {
   background: linear-gradient(90deg, #f0f, #0ff);
 }
-
 </style>
 </head>
 <body>
 
-<div class="lane" data-lane="0"></div>
-<div class="lane" data-lane="1"></div>
-<div class="lane" data-lane="2"></div>
-<div class="lane" data-lane="3"></div>
+<div class="lane"></div>
+<div class="lane"></div>
+<div class="lane"></div>
+<div class="lane"></div>
 <div class="hit-line"></div>
 
 <script>
 const lanes = document.querySelectorAll('.lane');
 let notes = [];
 let speed = 5;
+let holding = [false,false,false,false];
 
 // ===== ノーツ生成 =====
 setInterval(() => {
-  let typeRand = Math.random();
-  if(typeRand < 0.5){
+  let r = Math.random();
+  if(r < 0.5){
     spawnNote(Math.floor(Math.random()*4), "tap");
-  } else if(typeRand < 0.75){
+  } else if(r < 0.75){
     spawnNote(Math.floor(Math.random()*4), "long");
   } else {
     spawnSlide();
@@ -85,7 +85,7 @@ function spawnNote(laneIndex, type){
 
   if(type === "long"){
     note.classList.add("long");
-    note.style.height = "100px";
+    note.style.height = "120px";
   }
 
   note.style.top = "0px";
@@ -141,28 +141,11 @@ function update(){
 }
 update();
 
-// ===== 入力 =====
-let holding = [false,false,false,false];
-
-document.addEventListener('keydown', e=>{
-  if(e.key==='d'){ hit(0); holding[0]=true;}
-  if(e.key==='f'){ hit(1); holding[1]=true;}
-  if(e.key==='j'){ hit(2); holding[2]=true;}
-  if(e.key==='k'){ hit(3); holding[3]=true;}
-});
-
-document.addEventListener('keyup', e=>{
-  if(e.key==='d') holding[0]=false;
-  if(e.key==='f') holding[1]=false;
-  if(e.key==='j') holding[2]=false;
-  if(e.key==='k') holding[3]=false;
-});
-
 // ===== 判定 =====
 function hit(lane){
-  notes.forEach((n,i)=>{
-    let hitY = window.innerHeight - 120;
+  let hitY = window.innerHeight - 120;
 
+  notes.forEach((n,i)=>{
     if(n.type === "tap" && n.lane === lane){
       if(Math.abs(n.y - hitY) < 50){
         n.el.remove();
@@ -188,6 +171,46 @@ function hit(lane){
     }
   });
 }
+
+// ===== PC操作 =====
+document.addEventListener('keydown', e=>{
+  if(e.key==='d'){ hit(0); holding[0]=true;}
+  if(e.key==='f'){ hit(1); holding[1]=true;}
+  if(e.key==='j'){ hit(2); holding[2]=true;}
+  if(e.key==='k'){ hit(3); holding[3]=true;}
+});
+
+document.addEventListener('keyup', e=>{
+  if(e.key==='d') holding[0]=false;
+  if(e.key==='f') holding[1]=false;
+  if(e.key==='j') holding[2]=false;
+  if(e.key==='k') holding[3]=false;
+});
+
+// ===== スマホ対応（重要🔥）=====
+lanes.forEach((lane, index) => {
+
+  lane.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    holding[index] = true;
+    hit(index);
+  });
+
+  lane.addEventListener('touchend', () => {
+    holding[index] = false;
+  });
+
+  // PCクリックも対応
+  lane.addEventListener('mousedown', () => {
+    holding[index] = true;
+    hit(index);
+  });
+
+  lane.addEventListener('mouseup', () => {
+    holding[index] = false;
+  });
+
+});
 </script>
 
 </body>
